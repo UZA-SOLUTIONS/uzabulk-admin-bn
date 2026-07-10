@@ -91,6 +91,7 @@ router.get('/order/:_id', Auth.authAdminAndStaffAndVendor, Auth.getAccessForHide
 router.post('/order/status', Auth.authAdminAndStaffAndVendor, storeController.changeOrderStatus);
 router.post('/order/:_id/alibaba-logistics', Auth.authAdminAndStaffAndVendor, storeController.updateOrderAlibabaLogistics);
 router.post('/order/:_id/alibaba-logistics/sync', Auth.authAdminAndStaffAndVendor, storeController.syncOrderAlibabaLogisticsTrace);
+router.post('/order/:_id/warehouse-location', Auth.authAdminAndStaffAndVendor, storeController.updateOrderWarehouseLocation);
 
 router.post('/transaction', Auth.authAdminAndStaffAndVendor, Auth.checkAccessLevel, storeController.getTransaction);
 router.post('/pay', Auth.authAdminAndStaff, storeController.payToUser);

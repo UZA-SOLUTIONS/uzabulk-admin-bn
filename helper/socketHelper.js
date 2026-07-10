@@ -18,10 +18,9 @@ let nearByDriverSocket = async (users, resdata) => {
 }
 
 let singleSocket = async (channelId, userType, resdata, listen) => {
+    const socketUrlApi = env.socketUrlApi + '/request/single/socket';
     try {
-        let socketUrlApi = env.socketUrlApi + '/request/single/socket';
-
-        let request = await axios({
+        await axios({
             method: 'post',
             url: socketUrlApi,
             data: {
@@ -29,10 +28,16 @@ let singleSocket = async (channelId, userType, resdata, listen) => {
                 userType: userType,
                 resdata: resdata,
                 listen: listen ? listen : ''
-            }
+            },
+            timeout: 5000,
         });
     } catch (error) {
-        console.log("singleSocket err", error);
+        const status = error?.response?.status;
+        console.warn(
+            "singleSocket:",
+            status ? `HTTP ${status}` : error.code || error.message,
+            socketUrlApi
+        );
     }
 }
 

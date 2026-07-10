@@ -125,7 +125,23 @@ let generateGetOrdersQuery = async (req, data) => {
     }
 
     if (data.storeTypeId && ObjectId.isValid(data.storeTypeId)) {
-        findQuery.storeType = ObjectId(data.storeTypeId);
+        const storeTypeId = ObjectId(data.storeTypeId);
+        const storeTypeDoc = await storeType.findById(storeTypeId).select("store").lean();
+        const storeTypeMatch = [{ storeType: storeTypeId }];
+
+        // Customer storefront orders may omit storeType; include them when they belong to this store.
+        const untypedStoreFilter = {
+            $or: [{ storeType: { $exists: false } }, { storeType: null }],
+        };
+        if (storeTypeDoc?.store) {
+            untypedStoreFilter.store = ObjectId(storeTypeDoc.store);
+        }
+        storeTypeMatch.push(untypedStoreFilter);
+
+        if (!findQuery.$and) {
+            findQuery.$and = [];
+        }
+        findQuery.$and.push({ $or: storeTypeMatch });
     }
 
     if (data.deliveryType) {

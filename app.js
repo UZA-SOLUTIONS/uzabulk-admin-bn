@@ -19,7 +19,12 @@ const logger = require('morgan');
 const compression = require('compression')
 const EventEmitter = require('events');
 app = express();
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+}));
 app.use(bodyParser.json({ limit: '150mb' }));
 app.use(bodyParser.urlencoded({
   extended: true,

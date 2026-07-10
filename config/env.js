@@ -47,10 +47,12 @@ const env = {
         "REGION_NAME": process.env.SES_REGION,
     },
     "SMTP": {
-        "EMAIL_SOURCE": process.env.EMAIL_SOURCE,
-        "HOST": process.env.HOST,
-        "USERNAME": process.env.USERNAME,
-        "PASSWORD": process.env.PASSWORD
+        "EMAIL_SOURCE": process.env.EMAIL_SOURCE || process.env.SMTP_USER,
+        "HOST": process.env.SMTP_HOST || process.env.HOST,
+        "PORT": Number(process.env.SMTP_PORT || process.env.PORT || 587),
+        "SECURE": String(process.env.SMTP_SECURE ?? process.env.SECURE ?? "false").toLowerCase() === "true",
+        "USERNAME": process.env.SMTP_USER || process.env.USERNAME,
+        "PASSWORD": process.env.SMTP_PASS || process.env.PASSWORD,
     },
     "twilio": {
         "accountSid": "",

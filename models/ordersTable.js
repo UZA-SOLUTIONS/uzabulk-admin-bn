@@ -176,6 +176,13 @@ let orderSchema = mongoose.Schema({
     alibabaOrderResponse: Object,
     alibabaErrorMessage: String,
     /** 1688 alibaba.logistics.trace.get — polled every 6h when waybill + carrier are set */
+    /** Admin-set cargo location (e.g. China port, In transit, Dubai port). */
+    warehouseLocation: {
+        location: String,
+        notes: String,
+        markedAt: Date,
+        markedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    },
     alibabaLogistics: {
         tradeId: String,
         logisticsCompanyCode: String,
@@ -201,7 +208,7 @@ let orderSchema = mongoose.Schema({
                 enum: [
                     "order_placed", "payment_pending", "payment_confirmed", "order_confirmed", "delayed",
                     "preparing_for_shipment", "ready_for_dispatch", "shipped", "in_transit",
-                    "arrived_at_local_hub", "out_for_delivery", "delivery_attempted", "delivered",
+                    "arrived_at_local_hub", "cargo_located", "out_for_delivery", "delivery_attempted", "delivered",
                     "refund_initiated", "refund_completed", "order_cancelled", "order_rejected",
                     "archived"
                 ],

@@ -48,6 +48,10 @@ const {
     pollOrderLogisticsTrace,
     buildTraceQuery,
 } = require('../helper/alibabaLogisticsPoller');
+const {
+    appendCargoLocatedMilestone,
+    notifyCustomerCargoLocated,
+} = require('../helper/warehouseLocationHelper');
 const { getProductDetail } = require('../helper/alibaba.js');
 //var html_to_pdf = require('html-pdf-node');
 module.exports = {
@@ -1196,6 +1200,9 @@ module.exports = {
     getRestaurantDetailsById: async (req, res) => {
         try {
             let id = req.params._id;
+            if (!id || id === "undefined" || !ObjectId.isValid(id)) {
+                return res.json(helper.showSuccessResponse('USER_DETAIL', {}));
+            }
             let user_data = req.user
             let storeTypeDeliveryType = req.body.deliveryType;
             let store = req.store;
@@ -2040,6 +2047,69 @@ module.exports = {
             );
         } catch (err) {
             console.log('updateOrderAlibabaLogistics err', err);
+            res.json(helper.showInternalServerErrorResponse('INTERNAL_SERVER_ERROR'));
+        }
+    },
+
+    /** Mark where order cargo sits in warehouse inventory and notify the customer. */
+    updateOrderWarehouseLocation: async (req, res) => {
+        try {
+            const orderId = req.params._id;
+            if (!orderId) {
+                return res.json(helper.showValidationErrorResponse('ORDER_ID_REQUIRED'));
+            }
+
+            const existingOrder = await Order.findById(orderId).lean();
+            if (!existingOrder) {
+                return res.json(helper.showValidationErrorResponse('INVALID_ORDER_ID'));
+            }
+
+            const { location, notes, notifyCustomer } = req.body || {};
+            const locationText = String(location || "").trim();
+
+            if (!locationText) {
+                return res.json(
+                    helper.showValidationErrorResponse(
+                        'WAREHOUSE_LOCATION_REQUIRED',
+                        'Select or enter where the cargo is (e.g. Dubai port, In transit).'
+                    )
+                );
+            }
+
+            const warehouseLocation = {
+                location: locationText,
+                notes: String(notes || "").trim(),
+                markedAt: new Date(),
+                markedBy: req.user?._id || null,
+            };
+
+            const trackingHistory = appendCargoLocatedMilestone(existingOrder.trackingHistory);
+
+            await Order.updateOne(
+                { _id: orderId },
+                { $set: { warehouseLocation, trackingHistory } }
+            );
+
+            const shouldNotify = notifyCustomer !== false && notifyCustomer !== "false";
+            if (shouldNotify) {
+                const orderPopulated = await Order.findById(orderId)
+                    .populate({ path: "user", select: "name email firebaseTokens" })
+                    .populate({ path: "store", select: "firebase language" })
+                    .populate({ path: "storeType", select: "storeType" })
+                    .lean();
+
+                await notifyCustomerCargoLocated(orderPopulated, warehouseLocation);
+            }
+
+            return res.json(
+                helper.showSuccessResponse('DATA_SUCCESS', {
+                    warehouseLocation,
+                    trackingHistory,
+                    notified: shouldNotify,
+                })
+            );
+        } catch (err) {
+            console.log('updateOrderWarehouseLocation err', err);
             res.json(helper.showInternalServerErrorResponse('INTERNAL_SERVER_ERROR'));
         }
     },

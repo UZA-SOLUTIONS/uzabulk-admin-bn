@@ -80,6 +80,10 @@ module.exports = {
     userLogin: async (req, res, next) => {
         let data = req.body;
 
+        if (typeof data.email === "string") {
+            data.email = data.email.trim();
+        }
+
         if (!data.email) {
             return res.json(helper.showValidationErrorResponse('EMAIL_IS_REQUIRED'));
         }
