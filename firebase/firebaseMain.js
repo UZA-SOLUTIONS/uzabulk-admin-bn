@@ -1,40 +1,38 @@
 const admin = require('firebase-admin');
 
+function initFirebaseApp(serviceAccount, appName) {
+  const privateKey = (serviceAccount.private_key || "").replace(/\\n/g, "\n");
+  if (!serviceAccount.project_id || !serviceAccount.client_email || !privateKey) {
+    console.warn(
+      `[firebase] Skipping "${appName || "default"}" — set FIREBASE_* credentials in .env`
+    );
+    return null;
+  }
+
+  const options = {
+    credential: admin.credential.cert({
+      projectId: serviceAccount.project_id,
+      clientEmail: serviceAccount.client_email,
+      privateKey,
+    }),
+    databaseURL: serviceAccount.firebaseURL || undefined,
+  };
+
+  return appName
+    ? admin.initializeApp(options, appName)
+    : admin.initializeApp(options);
+}
+
 module.exports = function (app) {
-    /// firebase ///
-    var serviceAccount = require('./firebaseInfoCustomer');
-    let customerFDB = admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: serviceAccount.project_id, // I get no error here
-            clientEmail: serviceAccount.client_email, // I get no error here
-            privateKey: serviceAccount.private_key.replace(/\\n/g, '\n') // NOW THIS WORKS!!!
-        }),
-        databaseURL: serviceAccount.firebaseURL
-    });
+  const customerFDB = initFirebaseApp(require("./firebaseInfoCustomer"));
+  if (customerFDB) app.set("customerFDB", customerFDB);
 
-    app.set('customerFDB', customerFDB);
+  const driverFDB = initFirebaseApp(require("./firebaseInfoDriver"), "driverFDB");
+  if (driverFDB) app.set("driverFDB", driverFDB);
 
-    var serviceAccount1 = require('./firebaseInfoDriver');
-    let driverFDB = admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: serviceAccount1.project_id, // I get no error here
-            clientEmail: serviceAccount1.client_email, // I get no error here
-            privateKey: serviceAccount1.private_key.replace(/\\n/g, '\n') // NOW THIS WORKS!!!
-        }),
-        databaseURL: serviceAccount1.firebaseURL
-    }, "driverFDB");
-
-    app.set('driverFDB', driverFDB);
-
-    var serviceAccount2 = require('./firebaseInfoRestaurant');
-    let restaurantFDB = admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: serviceAccount2.project_id, // I get no error here
-            clientEmail: serviceAccount2.client_email, // I get no error here
-            privateKey: serviceAccount2.private_key.replace(/\\n/g, '\n') // NOW THIS WORKS!!!
-        }),
-        databaseURL: serviceAccount2.firebaseURL
-    }, "restaurantFDB");
-
-    app.set('restaurantFDB', restaurantFDB);
+  const restaurantFDB = initFirebaseApp(
+    require("./firebaseInfoRestaurant"),
+    "restaurantFDB"
+  );
+  if (restaurantFDB) app.set("restaurantFDB", restaurantFDB);
 };

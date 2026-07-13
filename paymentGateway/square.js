@@ -6,7 +6,7 @@ async function initilise(data) {
     if(data.paymentMode == "sandbox")
     client = new Client({
         environment: Environment.Sandbox,
-        accessToken: data.secretKey || "EAAAEPIWjXJg4XAWxM_mh8vLU6vyZN-nHqWWekNDZ5w31O4SfeEKWPu4pnkTdJMy",
+        accessToken: data.secretKey || process.env.SQUARE_SANDBOX_ACCESS_TOKEN || "",
     })
     else
     client = new Client({

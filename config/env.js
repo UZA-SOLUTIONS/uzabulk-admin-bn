@@ -1,10 +1,10 @@
 const env = {
     GMAIL: {
-        EMAIL: "payment@uzabulk.com",
-        PASSWORD: "qmxratdxmefzmdni",
+        EMAIL: process.env.GMAIL_EMAIL || "",
+        PASSWORD: process.env.GMAIL_PASSWORD || "",
     },
     vendorPanelUrl: "https://vendor.uzabulk.com/",
-    "jwtSecret": "uzaBulkAdmin@123",
+    "jwtSecret": process.env.JWT_SECRET || "",
     "storeVersion": 2,
     "DOMAIN": "admin-api.uzabulk.com",
     "publicIp": "47.253.10.32",
@@ -73,8 +73,8 @@ const env = {
         "FCM_MESSAGINGSENDERID": "1022233967182",
         "FCM_APPID": "1:1022233967182:web:12fea9f1cc2778240d211f",
         "FCM_MEASUREMENTID": "G-YNXB6C952D",
-        "FCM_CLIENT_EMAIL": "firebase-adminsdk-3szd8@hyperlocalcloud-62422.iam.gserviceaccount.com",
-        "FCM_PRIVATE_KEY": ""
+        "FCM_CLIENT_EMAIL": process.env.FIREBASE_CLIENT_EMAIL || "",
+        "FCM_PRIVATE_KEY": process.env.FIREBASE_PRIVATE_KEY || ""
     },
     "godaddyApiKey": {
         "mode": "live",
@@ -101,8 +101,8 @@ const env = {
         }
     },
     "superAdminEmail": "admin@projectName.com",
-    "GOOGLE_MAP_API_KEY": "",
-    "GOOGLE_MAP_API_KEY_WEB": "",
+    "GOOGLE_MAP_API_KEY": process.env.GOOGLE_MAP_API_KEY || "",
+    "GOOGLE_MAP_API_KEY_WEB": process.env.GOOGLE_MAP_API_KEY_WEB || "",
     "orangeMoneyAuthUrl": "https://api.orange.com/oauth/v3/token",
     "orangeMoneyTransactionUrl": "https://api.orange.com/orange-money-webpay/dev/v1/webpayment",
     "orangeMoneyLiveTransactionUrl": "https://api.orange.com/orange-money-webpay/sl/v1/webpayment",

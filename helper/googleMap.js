@@ -109,7 +109,7 @@ let getLatLngFromAddress = async (gkey, address) => {
         .geocode({
             params: {
                 address: address,
-                key: 'AIzaSyAjo7aS-HZMOyJhoCdCjOe5diEYZhvcAS4'
+                key: gkey
             }
         })
         .then((response) => {

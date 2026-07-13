@@ -9,6 +9,14 @@ dist/
 
 .env
 
+# Local Firebase / secret credential files (never commit)
+firebase/*.local.json
+firebase/credentials/
+*.pem
+*.p12
+serviceAccount*.json
+
+
 # Compiled Java class files
 *.class
 
