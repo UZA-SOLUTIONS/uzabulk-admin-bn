@@ -175,6 +175,7 @@ module.exports = (agenda) => {
 
             const updatedProductIds = [];
             const batch = await productBatchTable.findOne({ status: "processing" })
+                .sort({ createdAt: 1 })
                 .select("_id productIds")
                 .lean();
             if (batch) {
@@ -192,6 +193,7 @@ module.exports = (agenda) => {
                         productId.status = "completed"
 
                     }
+                    productId.processedAt = new Date();
                     productId.productDetails = await updateProductDetails(productDetailsFromDB, productDetailsFromALiBaba)
                     updatedProductIds.push(productId);
                 };

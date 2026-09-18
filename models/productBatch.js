@@ -13,6 +13,14 @@ let ProductBatchSchema = mongoose.Schema({
             type: String,
             enum: ["processing", "completed", "already exist"],
             default: "processing"
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        processedAt: {
+            type: Date,
+            default: null
         }
     }],
     title: String,
@@ -28,6 +36,7 @@ let ProductBatchSchema = mongoose.Schema({
 
 // Indexing
 ProductBatchSchema.index({ createdAt: -1 });
+ProductBatchSchema.index({ "productIds.offerId": 1 });
 
 const ProductBatchTable = module.exports = mongoose.model('ProductBatch', ProductBatchSchema);
 
@@ -35,7 +44,12 @@ module.exports.getBatchList = (obj, sortByField, sortOrder, paged, pageSize) => 
 
     return ProductBatchTable.aggregate([
         { $match: obj },
-        { $sort: { [sortByField]: parseInt(sortOrder) } }, { $skip: (paged - 1) * pageSize },
+        {
+            $sort: sortByField === "createdAt"
+                ? { createdAt: parseInt(sortOrder), _id: -1 }
+                : { [sortByField]: parseInt(sortOrder), createdAt: -1, _id: -1 }
+        },
+        { $skip: (paged - 1) * pageSize },
         { $limit: parseInt(pageSize) },
         {
             $project: {
