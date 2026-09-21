@@ -1,21 +1,17 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const { getAlibabaConfig, logAlibabaError } = require("./alibabaConfig");
 
-const ALIBABA_BASE_APP_URL = "https://gw.open.1688.com/openapi/";
-const ALIBABA_APP_KEY = "7320613";
-const ALIBABA_APP_SECRET = "Y4RC9QHrI91v";
-const ALIBABA_AUTH_TOKEN = "104e44a2-77d7-46ca-8c3d-d06772a3fcee";
-
-const generateHmacSha1Signature = (data) => {
-    const hmac = crypto.createHmac('sha1', ALIBABA_APP_SECRET);
+const generateHmacSha1Signature = (data, secretKey) => {
+    const hmac = crypto.createHmac('sha1', secretKey);
     hmac.update(data);
     return hmac.digest('hex').toUpperCase();
 }
 
-const generateApiSignature = (urlPath, params) => {
+const generateApiSignature = (urlPath, params, secretKey) => {
     const paramString = Object.entries(params).sort(([keyA], [keyB]) => keyA.localeCompare(keyB)).map(([key, value]) => `${key}${value}`).join('');
     const concatString = `${urlPath}${paramString}`;
-    const signature = generateHmacSha1Signature(concatString);
+    const signature = generateHmacSha1Signature(concatString, secretKey);
     const urlParams = new URLSearchParams(params);
     urlParams.append('_aop_signature', signature);
     return `${urlPath}?${urlParams.toString()}`;
@@ -23,31 +19,33 @@ const generateApiSignature = (urlPath, params) => {
 
 const alibabaPostRequest = async (urlPath, requestBody) => {
     try {
+        const { authToken, appSecret, baseUrl } = getAlibabaConfig();
         const signedUrl = generateApiSignature(urlPath, {
-            "access_token": ALIBABA_AUTH_TOKEN,
+            "access_token": authToken,
             ...requestBody,
-        });
-        const url = new URL(signedUrl, ALIBABA_BASE_APP_URL);
+        }, appSecret);
+        const url = new URL(signedUrl, baseUrl);
         const headers = { 'Content-Type': 'application/json' };
         return (await axios.post(url.toString(), requestBody, { headers })).data;
     }
     catch (error) {
-        console.error('Alibaba API error:', error?.response?.data || error?.message || error);
+        logAlibabaError(error);
         return null;
     }
 };
 
 const alibabaGetRequest = async (urlPath, requestBody) => {
     try {
+        const { authToken, appSecret, baseUrl } = getAlibabaConfig();
         const signedUrl = generateApiSignature(urlPath, {
-            "access_token": ALIBABA_AUTH_TOKEN,
+            "access_token": authToken,
             ...requestBody,
-        });
-        const url = new URL(signedUrl, ALIBABA_BASE_APP_URL);
+        }, appSecret);
+        const url = new URL(signedUrl, baseUrl);
         const headers = { 'Content-Type': 'application/json' };
         return (await axios.get(url.toString(), requestBody, { headers })).data;
     }
-    catch (error) { console.error('API Call Error: Unsuccessful response', error); }
+    catch (error) { logAlibabaError(error); }
 };
 
 /**
@@ -57,7 +55,8 @@ const alibabaGetRequest = async (urlPath, requestBody) => {
  * @returns 
  */
 const alibabaCreateOrder = async (orders) => {
-    const urlPath = `param2/1/com.alibaba.trade/alibaba.trade.createCrossOrder/${ALIBABA_APP_KEY}`;
+    const { appKey } = getAlibabaConfig();
+    const urlPath = `param2/1/com.alibaba.trade/alibaba.trade.createCrossOrder/${appKey}`;
     const reqBody = {
         "flow": "general",
         "addressParam": JSON.stringify({ "address": "8th Floor, Trade, No. 888, Jinda Road, Taopu Town", "phone": "0517-88990077", "mobile": "15251667788", "fullName": "Zhang San", "postCode": "000000", "districtCode": "310107" }),
@@ -68,7 +67,8 @@ const alibabaCreateOrder = async (orders) => {
 };
 
 const alibabaViewOrder = async (orderId) => {
-    const urlPath = `param2/1/com.alibaba.trade/alibaba.trade.get.buyerView/${ALIBABA_APP_KEY}`;
+    const { appKey } = getAlibabaConfig();
+    const urlPath = `param2/1/com.alibaba.trade/alibaba.trade.get.buyerView/${appKey}`;
     const reqBody = {
         "webSite": "1688",
         "orderId": orderId,
@@ -83,8 +83,9 @@ const alibabaViewOrder = async (orderId) => {
  * @param {{ templateId?: number|string, querySubTemplate?: boolean, queryRate?: boolean }} options
  */
 const getFreightTemplateList = async (options = {}) => {
+    const { appKey } = getAlibabaConfig();
     const urlPath =
-        `param2/1/com.alibaba.logistics/alibaba.logistics.myFreightTemplate.list.get/${ALIBABA_APP_KEY}`;
+        `param2/1/com.alibaba.logistics/alibaba.logistics.myFreightTemplate.list.get/${appKey}`;
 
     const reqBody = {};
     if (options.templateId != null && options.templateId !== '') {

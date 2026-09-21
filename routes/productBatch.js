@@ -10,4 +10,6 @@ router.post('/batch-list', productBatchController.getBatchList);
 
 router.get('/batch-details/:id', productBatchController.getBatchDetails);
 
+router.post('/reprocess', productBatchController.reprocessOfferIds);
+
 module.exports = router;

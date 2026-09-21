@@ -103,6 +103,12 @@ const env = {
     "superAdminEmail": "admin@projectName.com",
     "GOOGLE_MAP_API_KEY": process.env.GOOGLE_MAP_API_KEY || "",
     "GOOGLE_MAP_API_KEY_WEB": process.env.GOOGLE_MAP_API_KEY_WEB || "",
+    "alibaba": {
+        "BASE_APP_URL": process.env.ALIBABA_BASE_APP_URL || "https://gw.open.1688.com/openapi/",
+        "APP_KEY": process.env.ALIBABA_APP_KEY || "",
+        "APP_SECRET": process.env.ALIBABA_APP_SECRET || "",
+        "AUTH_TOKEN": process.env.ALIBABA_AUTH_TOKEN || "",
+    },
     "orangeMoneyAuthUrl": "https://api.orange.com/oauth/v3/token",
     "orangeMoneyTransactionUrl": "https://api.orange.com/orange-money-webpay/dev/v1/webpayment",
     "orangeMoneyLiveTransactionUrl": "https://api.orange.com/orange-money-webpay/sl/v1/webpayment",

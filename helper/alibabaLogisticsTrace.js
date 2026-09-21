@@ -1,6 +1,5 @@
 const { alibabaPostRequest } = require('./alibabaOrderService');
-
-const ALIBABA_APP_KEY = "7320613";
+const { getAlibabaConfig } = require('./alibabaConfig');
 
 const parseApiDate = (value) => {
     if (!value) return null;
@@ -23,8 +22,9 @@ const getLogisticsTrace = async ({
     logisticsCompanyCode,
     waybillNumber,
 } = {}) => {
+    const { appKey } = getAlibabaConfig();
     const urlPath =
-        `param2/1/com.alibaba.logistics/alibaba.logistics.trace.get/${ALIBABA_APP_KEY}`;
+        `param2/1/com.alibaba.logistics/alibaba.logistics.trace.get/${appKey}`;
 
     const reqBody = {};
     if (tradeId) reqBody.tradeId = String(tradeId);
