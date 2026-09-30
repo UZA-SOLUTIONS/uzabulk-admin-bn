@@ -488,7 +488,24 @@ module.exports.getUzaProductsList = (
   paged,
   callback
 ) => {
-  productTable.find(obj, { name: 1, _id: 1, bestSeller: 1, status: 1, createdAt: 1, updateAt: 1, vendor: 1, offerId: 1 }).skip((paged - 1) * pageSize).limit(parseInt(pageSize)).exec(callback);
+  productTable.find(obj, {
+    name: 1,
+    _id: 1,
+    bestSeller: 1,
+    status: 1,
+    createdAt: 1,
+    updateAt: 1,
+    vendor: 1,
+    offerId: 1,
+    featured_image: 1,
+    price: 1,
+    compare_price: 1,
+    date_created_utc: 1,
+  })
+    .sort({ [sortByField]: parseInt(sortOrder) || -1 })
+    .skip((paged - 1) * pageSize)
+    .limit(parseInt(pageSize))
+    .exec(callback);
 }
 
 module.exports.getProductsListForUser = (

@@ -65,6 +65,10 @@ module.exports = function (app) {
     const productBatch = require('./productBatch');
     app.use('/authenticationservice/api/v1/product-batch', productBatch);
 
+    const uploads = require('./uploads');
+    app.use('/authenticationservice/api/v1/uploads', uploads);
+    app.use('/uploads', uploads);
+
     moduleConfig.forEach(element => {
         if (element.status && element.route) {
             let path = require('../module/' + element.type);

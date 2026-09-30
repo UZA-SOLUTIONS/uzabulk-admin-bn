@@ -9,6 +9,7 @@ const categoryTable = require('../../models/categoryTable');
 const addonTable = require('../../models/addonTable');
 const cuisinesTable = require('../../models/cuisinesTable');
 const helper = require("../../helper/helper");
+const { applyCatalogDefaults, keepImageUrls, VENDOR_ID } = require("../../helper/catalogDefaults");
 module.exports = {
 
     createProductDefault: async (req, res, next) => {
@@ -102,6 +103,9 @@ module.exports = {
         if (!data.storeTypeId) {
             return res.json(helper.showValidationErrorResponse('STORE_TYPE_ID_IS_REQUIRED'));
         }
+        if (!data.vendor && !req.isVendor) {
+            data.vendor = VENDOR_ID;
+        }
         if (!data.vendor) {
             return res.json(helper.showValidationErrorResponse('VENDOR_ID_IS_REQUIRED'));
         }
@@ -175,28 +179,15 @@ module.exports = {
             data.vendor = req.userId;
         }
 
+        applyCatalogDefaults(data, { isVendor: !!req.isVendor });
+        keepImageUrls(data);
+
         if (!data.vendor) {
             return res.json(helper.showValidationErrorResponse('VENDOR_ID_IS_REQUIRED'));
         }
 
-        if (!data.type) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_TYPE_IS_REQUIRED'));
-        }
-
-        if (!data.status) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_STATUS_IS_REQUIRED'));
-        }
-
         if (!data.name) {
             return res.json(helper.showValidationErrorResponse('PRODUCT_NAME_IS_REQUIRED'));
-        }
-
-        if (!data.stock_status) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_STOCK_STATUS_IS_REQUIRED'));
-        }
-
-        if (!data.price) {
-            return res.json(helper.showValidationErrorResponse('PRICE_IS_REQUIRED'));
         }
 
         if (Number(data.price) < 0) {
@@ -209,34 +200,16 @@ module.exports = {
             }
         }
 
-        if (data.categories.length === 0) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_CATEGORIES_IS_REQUIRED'));
-        }
-
-        if (!data.featured_image) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_IMAGES_IS_REQUIRED'));
-        }
-
-        if (!data.description) {
-            return res.json(helper.showValidationErrorResponse('DESCRIPTION_IS_REQUIRED'));
-        }
-        // if (!data.featureAttribute || !data.featureAttribute?.length) {
-        //     return res.json(helper.showValidationErrorResponse('FEATURE_ATTRIBUTE_IS_REQUIRED'));
-        // };
-
-        if (data.images && data.images.length > 0) {
-            req.body.images = data.images;
-        } else {
-            req.body.images = [];
-        }
+        req.body.images = data.images;
+        req.body.featured_image = data.featured_image;
+        req.body.categories = data.categories;
 
         if (data.type === "variable") {
-
-            if (data.attributes.length === 0) {
+            if (!data.attributes.length) {
                 return res.json(helper.showValidationErrorResponse('PRODUCT_ATTRIBUTES_IS_REQUIRED'));
             }
 
-            if (data.variations.length === 0) {
+            if (!data.variations.length) {
                 return res.json(helper.showValidationErrorResponse('PRODUCT_VARIATIONS_IS_REQUIRED'));
             }
 
@@ -269,8 +242,7 @@ module.exports = {
         }
 
         if (req.body.manage_stock) {
-
-            if (!data.stock_quantity) {
+            if (!data.stock_quantity && data.stock_quantity !== 0) {
                 return res.json(helper.showValidationErrorResponse('PRODUCT_STOCK_QUANTITY_IS_REQUIRED'));
             }
         }
@@ -288,24 +260,11 @@ module.exports = {
     updateProductByGroceryVendor: async (req, res, next) => {
         let data = req.body;
 
-        if (!data.type) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_TYPE_IS_REQUIRED'));
-        }
-
-        if (!data.status) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_STATUS_IS_REQUIRED'));
-        }
+        applyCatalogDefaults(data, { isVendor: !!req.isVendor });
+        keepImageUrls(data);
 
         if (!data.name) {
             return res.json(helper.showValidationErrorResponse('PRODUCT_NAME_IS_REQUIRED'));
-        }
-
-        if (!data.stock_status) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_STOCK_STATUS_IS_REQUIRED'));
-        }
-
-        if (!data.price) {
-            return res.json(helper.showValidationErrorResponse('PRICE_IS_REQUIRED'));
         }
 
         if (Number(data.price) < 0) {
@@ -318,31 +277,16 @@ module.exports = {
             }
         }
 
-        if (data.categories.length === 0) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_CATEGORIES_IS_REQUIRED'));
-        }
-
-        if (!data.featured_image) {
-            return res.json(helper.showValidationErrorResponse('PRODUCT_IMAGES_IS_REQUIRED'));
-        }
-
-        if (!data.description) {
-            return res.json(helper.showValidationErrorResponse('DESCRIPTION_IS_REQUIRED'));
-        }
-
-        if (data.images && data.images.length > 0) {
-            req.body.images = data.images;
-        } else {
-            req.body.images = [];
-        }
+        req.body.images = data.images;
+        req.body.featured_image = data.featured_image;
+        req.body.categories = data.categories;
 
         if (data.type === "variable") {
-
-            if (data.attributes.length === 0) {
+            if (!data.attributes.length) {
                 return res.json(helper.showValidationErrorResponse('PRODUCT_ATTRIBUTES_IS_REQUIRED'));
             }
 
-            if (data.variations.length === 0) {
+            if (!data.variations.length) {
                 return res.json(helper.showValidationErrorResponse('PRODUCT_VARIATIONS_IS_REQUIRED'));
             }
 
@@ -382,8 +326,7 @@ module.exports = {
         }
 
         if (req.body.manage_stock) {
-
-            if (!data.stock_quantity) {
+            if (!data.stock_quantity && data.stock_quantity !== 0) {
                 return res.json(helper.showValidationErrorResponse('PRODUCT_STOCK_QUANTITY_IS_REQUIRED'));
             }
         }

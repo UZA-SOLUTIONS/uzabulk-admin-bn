@@ -21,6 +21,7 @@ const Store = require('../models/storeTable');
 const storeType = require("../models/storeTypeTable");
 const { updateProductIndex } = require('../lib/elasticSearch.js');
 const userTable = require('../models/userTable');
+const { applyCatalogDefaults, keepImageUrls } = require('../helper/catalogDefaults');
 
 module.exports = {
     test: async (req, res) => {
@@ -801,7 +802,10 @@ module.exports = {
                 const vendorInfo = await userTable.getVendorInfo(data?.vendor);
                 data.region = vendorInfo?.region || "CH";
             }
-            data.baseCurrency = "CNY";
+
+            applyCatalogDefaults(data, { isVendor: !!req.isVendor });
+            keepImageUrls(data);
+            data.baseCurrency = data.baseCurrency || "CNY";
 
             Product.addProduct(data, (err, resdata) => {
                 if (err) {
@@ -1079,6 +1083,8 @@ module.exports = {
                 const vendorInfo = await userTable.getVendorInfo(data?.vendor);
                 data.region = vendorInfo?.region || "CH";
             }
+
+            keepImageUrls(data);
 
             Product.updateProduct(data, (err, resdata) => {
                 if (err) {
