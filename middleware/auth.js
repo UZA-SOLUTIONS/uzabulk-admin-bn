@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const User = require('../models/userTable.js');
 const Store = require('../models/storeTable');
 const Content = require('../models/contentPagesTable');
@@ -6,6 +7,15 @@ const jwt = require('jsonwebtoken');
 const Config = require('../config/constants.json');
 const storeType = require('../models/storeTypeTable');
 const ObjectId = require('objectid');
+
+const timingSafeEqualString = (a, b) => {
+    const left = Buffer.from(String(a || ''), 'utf8');
+    const right = Buffer.from(String(b || ''), 'utf8');
+    if (left.length !== right.length) {
+        return false;
+    }
+    return crypto.timingSafeEqual(left, right);
+};
 
 function getActionAndType(path, method, storeTypeName) {
 
@@ -592,6 +602,75 @@ module.exports = {
             next();
         } catch (error) {
             console.log("isUniversalApp err", error);
+        }
+    },
+
+    /**
+     * Machine auth for partner read-only orders API.
+     * Uses header `apikey` against ORDERS_API_KEY (not Store.api_key).
+     */
+    authPartnerOrders: async (req, res, next) => {
+        try {
+            if (!req.get('apikey')) {
+                return res.json(helper.showUnathorizedAppErrorResponse('STORE_API_KEY_IS_REQUIRED'));
+            }
+
+            const configuredKey = process.env.ORDERS_API_KEY || '';
+            if (!configuredKey) {
+                return res.json(helper.showUnathorizedAppErrorResponse('NOT_AUTHORIZED'));
+            }
+
+            const providedKey = req.get('apikey');
+            if (!timingSafeEqualString(providedKey, configuredKey)) {
+                return res.json(helper.showUnathorizedAppErrorResponse('NOT_AUTHORIZED'));
+            }
+
+            const storeFilter = { status: { $in: ['active', 'gracePeriod'] } };
+            const scopedStoreId = process.env.ORDERS_STORE_ID || '';
+            if (scopedStoreId) {
+                storeFilter._id = scopedStoreId;
+            }
+
+            const getApp = await Store.findOne(storeFilter)
+                .select('_id storeName timezone currency hideThings language storeLanguage')
+                .lean()
+                .exec();
+
+            if (scopedStoreId && !getApp) {
+                return res.json(helper.showUnathorizedAppErrorResponse('STORE_IS_NOT_ACTIVE'));
+            }
+
+            const lang = req.get('Accept-Language');
+            if (getApp) {
+                if (lang && getApp.storeLanguage) {
+                    const langcode = getApp.storeLanguage.find((i) => i.code == lang);
+                    if (langcode) {
+                        req.setLocale(langcode.code);
+                    }
+                } else if (getApp.language && getApp.language.code) {
+                    req.setLocale(getApp.language.code);
+                }
+            }
+
+            req.isPartner = true;
+            // Only enforce store scope when ORDERS_STORE_ID is explicitly set
+            req.partnerStoreScoped = Boolean(scopedStoreId);
+            req.store = getApp
+                ? {
+                    storeId: getApp._id,
+                    storeName: getApp.storeName,
+                    timezone: getApp.timezone,
+                    currency: getApp.currency,
+                    hideThings: getApp.hideThings,
+                    language: getApp.language,
+                    storeLanguage: getApp.storeLanguage,
+                }
+                : null;
+
+            return next();
+        } catch (error) {
+            console.log('authPartnerOrders err', error);
+            return res.json(helper.showUnathorizedAppErrorResponse('NOT_AUTHORIZED'));
         }
     },
 

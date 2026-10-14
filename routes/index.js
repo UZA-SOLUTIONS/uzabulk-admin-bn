@@ -5,6 +5,9 @@ module.exports = function (app) {
     const store = require('./store');
     app.use('/authenticationservice/api/v1/store', store);
 
+    const partner = require('./partner');
+    app.use('/authenticationservice/api/v1/partner', partner);
+
     const faq = require('./faq');
     app.use('/authenticationservice/api/v1/faq', faq);
 
